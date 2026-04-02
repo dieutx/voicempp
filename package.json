@@ -1,0 +1,25 @@
+{
+  "name": "voicempp",
+  "version": "1.0.0",
+  "description": "Voice-as-a-Service over MPP — TTS and STT for machines and apps via Tempo micropayments",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test:tts": "tsx src/test-tts.ts",
+    "test:stt": "tsx src/test-stt.ts"
+  },
+  "keywords": ["tempo", "mpp", "voice", "tts", "stt", "micropayments", "voice"],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "mppx": "latest",
+    "viem": "^2.47.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0"
+  }
+}

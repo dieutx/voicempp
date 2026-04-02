@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.mp3
+*.wav
+
+# Large binaries and models (downloaded at build time)
+bin/
+models/

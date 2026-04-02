@@ -1,0 +1,10 @@
+services:
+  voicempp:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - MPP_SECRET_KEY=${MPP_SECRET_KEY}
+      - PORT=3000
+    restart: unless-stopped

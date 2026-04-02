@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceMPP — Voice-as-a-Service via Tempo MPP</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      background: #fafafa;
+      color: #111;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #6d28d9; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .header {
+      padding: 3rem 2rem 0;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #111;
+      margin-bottom: 0.25rem;
+    }
+    h1 span {
+      background: linear-gradient(135deg, #6d28d9, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: #6b7280;
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+    .badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #374151;
+    }
+    .badge.purple { color: #6d28d9; border-color: #ddd6fe; background: #f5f3ff; }
+    .badge.green { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+    .badge.blue { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 0 2rem 2rem; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+    .tab {
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      color: #9ca3af;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .tab:hover { color: #6b7280; }
+    .tab.active {
+      color: #6d28d9;
+      border-bottom-color: #6d28d9;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .card h3 {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+    }
+
+    /* Form elements */
+    label {
+      display: block;
+      color: #6b7280;
+      font-size: 0.8rem;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    textarea, select {
+      width: 100%;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.7rem 0.8rem;
+      color: #111;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+    textarea:focus, select:focus { outline: none; border-color: #6d28d9; box-shadow: 0 0 0 3px rgba(109,40,217,0.08); }
+    .char-count {
+      text-align: right;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 0.3rem;
+    }
+    .char-count.warn { color: #d97706; }
+    .char-count.over { color: #dc2626; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.8rem; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.8rem; }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Param pills */
+    .param-pill {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .param-pill label {
+      text-align: center;
+      margin-bottom: 0.4rem;
+    }
+    .param-pill .param-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #6d28d9;
+      margin-bottom: 0.25rem;
+    }
+    .param-pill input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      margin: 0;
+    }
+    .param-pill input[type="range"]::-webkit-slider-track {
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+    }
+    .param-pill input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #6d28d9;
+      border-radius: 50%;
+      margin-top: -6px;
+      cursor: pointer;
+    }
+    .param-pill input[type="range"]::-moz-range-track {
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+    }
+    .param-pill input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: #6d28d9;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: #6d28d9;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .btn-primary:hover { background: #5b21b6; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-record {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .btn-record:hover { background: #b91c1c; }
+    .btn-record.recording { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+    /* Output */
+    .output {
+      margin-top: 0.75rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      min-height: 50px;
+    }
+    .output audio { width: 100%; }
+    .transcript { font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; color: #111; }
+    .status { font-size: 0.8rem; color: #9ca3af; margin-top: 0.5rem; }
+    .status.error { color: #dc2626; }
+    .status.success { color: #059669; }
+
+    /* Price tag */
+    .price-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #059669;
+    }
+
+    /* API docs */
+    .doc-section { margin-bottom: 2rem; }
+    .doc-section h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .endpoint-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .endpoint-table th {
+      text-align: left;
+      font-weight: 600;
+      color: #6b7280;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .endpoint-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: top;
+    }
+    .method-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .method-badge.get { background: #dbeafe; color: #1d4ed8; }
+    .method-badge.post { background: #dcfce7; color: #166534; }
+    .ep-path { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 0.82rem; color: #111; font-weight: 600; }
+    .ep-price { font-size: 0.8rem; color: #059669; font-weight: 600; }
+    .ep-desc { color: #6b7280; font-size: 0.82rem; }
+
+    pre.code-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      margin-bottom: 0.75rem;
+    }
+    .code-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 0.4rem;
+    }
+    .perf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .perf-table th {
+      text-align: left;
+      font-weight: 600;
+      color: #6b7280;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .perf-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: #9ca3af;
+      padding: 2rem;
+      font-size: 0.8rem;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 2rem;
+    }
+    footer a { color: #6d28d9; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><span>VoiceMPP</span></h1>
+    <p class="subtitle">Fully self-hosted Voice-as-a-Service via Tempo micropayments. No external APIs, no rate limits.</p>
+    <div class="badges" id="badges-container"></div>
+  </div>
+
+  <div class="container">
+    <div class="tabs" id="tabs-container"></div>
+
+    <!-- TTS Tab -->
+    <div id="tab-tts" class="tab-content active">
+      <div class="card">
+        <h3>Input</h3>
+        <label for="tts-text">Text to synthesize</label>
+        <textarea id="tts-text" rows="4" placeholder="Type or paste text to convert to speech...">Hello! I am VoiceMPP, a fully self-hosted voice service powered by Tempo micropayments.</textarea>
+        <div class="char-count" id="char-count">86 / 500</div>
+
+        <div class="grid-2">
+          <div>
+            <label for="tts-voice">Voice</label>
+            <select id="tts-voice"></select>
+          </div>
+          <div>
+            <label>Pricing</label>
+            <div class="price-tag" style="margin-top:0.15rem;" id="price-display">$0.05 per request</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Parameters</h3>
+        <div class="grid-4" id="params-grid"></div>
+        <div style="margin-top:1.25rem;text-align:right;">
+          <button class="btn-primary" id="tts-btn" type="button">Generate Speech</button>
+        </div>
+      </div>
+
+      <div class="output" id="tts-output"></div>
+      <div class="status" id="tts-status"></div>
+    </div>
+
+    <!-- STT Tab -->
+    <div id="tab-stt" class="tab-content">
+      <div class="card">
+        <h3>Audio Input</h3>
+        <p style="color:#6b7280; font-size:0.85rem; margin-bottom:1rem;">Record from your microphone or upload an audio file to transcribe.</p>
+
+        <div class="grid-2">
+          <div>
+            <label for="stt-lang">Language</label>
+            <select id="stt-lang"></select>
+          </div>
+          <div>
+            <label>Pricing</label>
+            <div class="price-tag" style="margin-top:0.15rem;">$0.01 per request</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:1rem;">
+          <div>
+            <label>Microphone</label>
+            <button id="record-btn" class="btn-record" type="button" style="width:100%;margin-top:0.3rem;">Record</button>
+          </div>
+          <div>
+            <label for="stt-file">Upload File</label>
+            <input type="file" id="stt-file" accept="audio/*" style="margin-top:0.3rem;color:#6b7280;font-size:0.85rem;">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Transcript</h3>
+        <div class="output" id="stt-output">
+          <div class="transcript" id="stt-transcript" style="color:#9ca3af;">Transcript will appear here...</div>
+        </div>
+        <div class="status" id="stt-status"></div>
+      </div>
+    </div>
+
+    <!-- API Docs Tab -->
+    <div id="tab-api" class="tab-content">
+      <div class="card">
+        <div class="doc-section">
+          <h4>Endpoints</h4>
+          <table class="endpoint-table" id="endpoint-table">
+            <thead>
+              <tr><th>Method</th><th>Path</th><th>Price</th><th>Description</th></tr>
+            </thead>
+            <tbody id="endpoint-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>TTS Request / Response</h4>
+          <div class="code-label">Request Body (JSON)</div>
+          <pre class="code-block" id="tts-request-example"></pre>
+          <div class="code-label">Response</div>
+          <pre class="code-block" id="tts-response-example"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>STT Request / Response</h4>
+          <div class="code-label">Request (multipart/form-data)</div>
+          <pre class="code-block" id="stt-request-example"></pre>
+          <div class="code-label">Response (JSON)</div>
+          <pre class="code-block" id="stt-response-example"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>Sample Code</h4>
+          <div class="code-label">curl -- TTS</div>
+          <pre class="code-block" id="curl-tts-example"></pre>
+          <div class="code-label">curl -- STT</div>
+          <pre class="code-block" id="curl-stt-example"></pre>
+          <div class="code-label">TypeScript -- TTS</div>
+          <pre class="code-block" id="ts-tts-example"></pre>
+          <div class="code-label">TypeScript -- STT</div>
+          <pre class="code-block" id="ts-stt-example"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>MPP Payment Flow (HTTP 402)</h4>
+          <pre class="code-block" id="payment-flow-example"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>TypeScript (mppx SDK)</h4>
+          <pre class="code-block" id="ts-mpp-example"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>mppx CLI Examples</h4>
+          <pre class="code-block" id="mppx-examples"></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="doc-section">
+          <h4>Performance Metrics</h4>
+          <table class="perf-table">
+            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody id="perf-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="page-footer"></footer>
+
+  <script>
+    // ===== Badges =====
+    (function buildBadges() {
+      var items = [
+        { text: "Tempo MPP Hackathon 2026", cls: "purple" },
+        { text: "9 Voices / 8 Languages", cls: "blue" },
+        { text: "Zero External APIs", cls: "green" },
+        { text: "Piper TTS", cls: "" },
+        { text: "whisper.cpp", cls: "" }
+      ];
+      var container = document.getElementById("badges-container");
+      for (var i = 0; i < items.length; i++) {
+        var span = document.createElement("span");
+        span.className = "badge" + (items[i].cls ? " " + items[i].cls : "");
+        span.textContent = items[i].text;
+        container.appendChild(span);
+      }
+    })();
+
+    // ===== Tabs =====
+    var tabDefs = [
+      { id: "tts", label: "Text to Speech" },
+      { id: "stt", label: "Speech to Text" },
+      { id: "api", label: "API Docs" }
+    ];
+
+    (function buildTabs() {
+      var container = document.getElementById("tabs-container");
+      for (var i = 0; i < tabDefs.length; i++) {
+        var div = document.createElement("div");
+        div.className = "tab" + (i === 0 ? " active" : "");
+        div.textContent = tabDefs[i].label;
+        div.setAttribute("data-tab", tabDefs[i].id);
+        div.addEventListener("click", handleTabClick);
+        container.appendChild(div);
+      }
+    })();
+
+    function handleTabClick(e) {
+      var name = e.currentTarget.getAttribute("data-tab");
+      switchTab(name);
+    }
+
+    function switchTab(name) {
+      var allTabs = document.querySelectorAll(".tab");
+      var allContent = document.querySelectorAll(".tab-content");
+      for (var i = 0; i < allTabs.length; i++) {
+        allTabs[i].classList.remove("active");
+        if (allTabs[i].getAttribute("data-tab") === name) {
+          allTabs[i].classList.add("active");
+        }
+      }
+      for (var j = 0; j < allContent.length; j++) {
+        allContent[j].classList.remove("active");
+      }
+      var target = document.getElementById("tab-" + name);
+      if (target) target.classList.add("active");
+    }
+
+    // ===== TTS Parameters (pill cards) =====
+    var paramDefs = [
+      { id: "tts-speed", label: "Speed", min: 0.5, max: 2.0, step: 0.1, value: 1.0, suffix: "x", decimals: 1 },
+      { id: "tts-noise", label: "Expressiveness", min: 0.0, max: 1.0, step: 0.01, value: 0.67, suffix: "", decimals: 2 },
+      { id: "tts-noisew", label: "Variation", min: 0.0, max: 1.0, step: 0.01, value: 0.80, suffix: "", decimals: 2 },
+      { id: "tts-silence", label: "Sentence Pause", min: 0.0, max: 2.0, step: 0.1, value: 0.2, suffix: "s", decimals: 1 }
+    ];
+
+    (function buildParams() {
+      var grid = document.getElementById("params-grid");
+      for (var i = 0; i < paramDefs.length; i++) {
+        var p = paramDefs[i];
+        var pill = document.createElement("div");
+        pill.className = "param-pill";
+
+        var lbl = document.createElement("label");
+        lbl.textContent = p.label;
+        pill.appendChild(lbl);
+
+        var valDiv = document.createElement("div");
+        valDiv.className = "param-value";
+        valDiv.id = p.id + "-val";
+        valDiv.textContent = p.value.toFixed(p.decimals) + p.suffix;
+        pill.appendChild(valDiv);
+
+        var input = document.createElement("input");
+        input.type = "range";
+        input.id = p.id;
+        input.min = String(p.min);
+        input.max = String(p.max);
+        input.step = String(p.step);
+        input.value = String(p.value);
+        input.setAttribute("data-suffix", p.suffix);
+        input.setAttribute("data-decimals", String(p.decimals));
+        input.addEventListener("input", handleParamChange);
+        pill.appendChild(input);
+
+        grid.appendChild(pill);
+      }
+    })();
+
+    function handleParamChange(e) {
+      var input = e.target;
+      var valEl = document.getElementById(input.id + "-val");
+      var suffix = input.getAttribute("data-suffix");
+      var decimals = parseInt(input.getAttribute("data-decimals"), 10);
+      valEl.textContent = parseFloat(input.value).toFixed(decimals) + suffix;
+    }
+
+    // ===== Generate Speech button =====
+    document.getElementById("tts-btn").addEventListener("click", doTTS);
+
+    // ===== STT Language Selector =====
+    (function buildSttLang() {
+      var langs = [
+        { code: "", label: "Auto-detect", flag: "" },
+        { code: "en", label: "English", flag: "" },
+        { code: "zh", label: "Chinese", flag: "" },
+        { code: "fr", label: "French", flag: "" },
+        { code: "de", label: "German", flag: "" },
+        { code: "es", label: "Spanish", flag: "" },
+        { code: "vi", label: "Vietnamese", flag: "" },
+        { code: "pt", label: "Portuguese", flag: "" },
+        { code: "ru", label: "Russian", flag: "" },
+        { code: "ja", label: "Japanese", flag: "" },
+        { code: "ko", label: "Korean", flag: "" }
+      ];
+      var sel = document.getElementById("stt-lang");
+      for (var i = 0; i < langs.length; i++) {
+        var opt = document.createElement("option");
+        opt.value = langs[i].code;
+        opt.textContent = langs[i].flag + " " + langs[i].label + (langs[i].code ? " (" + langs[i].code + ")" : "");
+        sel.appendChild(opt);
+      }
+    })();
+
+    // ===== STT file upload =====
+    document.getElementById("stt-file").addEventListener("change", doSTTFile);
+    document.getElementById("record-btn").addEventListener("click", toggleRecord);
+
+    // ===== Load voices =====
+    (function loadVoices() {
+      var voiceMap = {
+        "en_US": "English (US)",
+        "en_GB": "English (UK)",
+        "de_DE": "German",
+        "fr_FR": "French",
+        "es_ES": "Spanish",
+        "zh_CN": "Chinese",
+        "vi_VN": "Vietnamese",
+        "pt_BR": "Portuguese",
+        "ru_RU": "Russian",
+        "ja_JP": "Japanese",
+        "ko_KR": "Korean"
+      };
+      fetch("/api/voices").then(function(res) {
+        return res.json();
+      }).then(function(data) {
+        var select = document.getElementById("tts-voice");
+        var voices = data.voices || [];
+        var defaultSet = false;
+        for (var i = 0; i < voices.length; i++) {
+          var v = voices[i];
+          var opt = document.createElement("option");
+          opt.value = v.id;
+          var langKey = v.id.split("-")[0];
+          var langLabel = voiceMap[langKey] || v.language || langKey;
+          opt.textContent = v.name + " - " + langLabel + " (" + v.gender + ")";
+          if (v.id === "en_US-amy-medium") {
+            opt.selected = true;
+            defaultSet = true;
+          }
+          select.appendChild(opt);
+        }
+        if (!defaultSet && select.options.length > 0) {
+          select.options[0].selected = true;
+        }
+      }).catch(function(e) {
+        console.error("Failed to load voices:", e);
+      });
+    })();
+
+    // ===== Character count =====
+    function updateCharCount() {
+      var text = document.getElementById("tts-text").value;
+      var el = document.getElementById("char-count");
+      var len = text.length;
+      el.textContent = len + " / 500";
+      el.className = "char-count" + (len > 500 ? " over" : len > 400 ? " warn" : "");
+    }
+    document.getElementById("tts-text").addEventListener("input", updateCharCount);
+    updateCharCount();
+
+    // ===== TTS =====
+    function doTTS() {
+      var btn = document.getElementById("tts-btn");
+      var output = document.getElementById("tts-output");
+      var status = document.getElementById("tts-status");
+      var text = document.getElementById("tts-text").value.trim();
+      var voice = document.getElementById("tts-voice").value;
+      var speed = parseFloat(document.getElementById("tts-speed").value);
+      var noiseScale = parseFloat(document.getElementById("tts-noise").value);
+      var noiseW = parseFloat(document.getElementById("tts-noisew").value);
+      var sentenceSilence = parseFloat(document.getElementById("tts-silence").value);
+
+      if (!text) {
+        status.textContent = "Please enter some text.";
+        status.className = "status error";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Generating...";
+      status.textContent = "Processing " + text.length + " characters...";
+      status.className = "status";
+      while (output.firstChild) output.removeChild(output.firstChild);
+
+      var start = Date.now();
+      fetch("/api/demo/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text,
+          voice: voice,
+          speed: speed,
+          noiseScale: noiseScale,
+          noiseW: noiseW,
+          sentenceSilence: sentenceSilence
+        })
+      }).then(function(res) {
+        if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+        return res.blob();
+      }).then(function(blob) {
+        var url = URL.createObjectURL(blob);
+        var elapsed = ((Date.now() - start) / 1000).toFixed(2);
+        var audio = document.createElement("audio");
+        audio.controls = true;
+        audio.autoplay = true;
+        audio.src = url;
+        output.appendChild(audio);
+        status.textContent = "Generated in " + elapsed + "s | " + text.length + " chars | " + (blob.size / 1024).toFixed(1) + " KB";
+        status.className = "status success";
+      }).catch(function(err) {
+        status.textContent = "Error: " + err.message;
+        status.className = "status error";
+      }).finally(function() {
+        btn.disabled = false;
+        btn.textContent = "Generate Speech";
+      });
+    }
+
+    // ===== STT =====
+    var mediaRecorder = null;
+    var audioChunks = [];
+
+    function toggleRecord() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      var btn = document.getElementById("record-btn");
+      var status = document.getElementById("stt-status");
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        // Pick best supported mime type
+        var mimeType = "audio/webm;codecs=opus";
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "audio/webm";
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "audio/ogg;codecs=opus";
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "";  // let browser pick default
+        }
+
+        var options = mimeType ? { mimeType: mimeType } : {};
+        mediaRecorder = new MediaRecorder(stream, options);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = function(e) {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = function() {
+          stream.getTracks().forEach(function(t) { t.stop(); });
+          var actualType = mediaRecorder.mimeType || "audio/webm";
+          var ext = actualType.indexOf("ogg") !== -1 ? "ogg" : "webm";
+          var blob = new Blob(audioChunks, { type: actualType });
+          if (blob.size < 100) {
+            status.textContent = "Recording too short or empty. Try speaking longer.";
+            status.className = "status error";
+            return;
+          }
+          sendSTT(blob, "recording." + ext);
+        };
+
+        // Request data every 250ms to ensure chunks are captured
+        mediaRecorder.start(250);
+        btn.textContent = "Stop Recording";
+        btn.classList.add("recording");
+        status.textContent = "Recording... (speak now)";
+        status.className = "status";
+      }).catch(function(err) {
+        status.textContent = "Microphone error: " + err.message;
+        status.className = "status error";
+      });
+    }
+
+    function stopRecording() {
+      var btn = document.getElementById("record-btn");
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+        btn.textContent = "Record";
+        btn.classList.remove("recording");
+      }
+    }
+
+    function doSTTFile() {
+      var fileInput = document.getElementById("stt-file");
+      var file = fileInput.files[0];
+      if (!file) return;
+      sendSTT(file, file.name);
+    }
+
+    function sendSTT(blob, filename) {
+      var status = document.getElementById("stt-status");
+      var transcript = document.getElementById("stt-transcript");
+      var lang = document.getElementById("stt-lang").value;
+
+      status.textContent = "Transcribing...";
+      status.className = "status";
+      transcript.textContent = "";
+      transcript.style.color = "";
+
+      var start = Date.now();
+      var form = new FormData();
+      form.append("file", blob, filename);
+      if (lang) form.append("language", lang);
+
+      fetch("/api/demo/stt", { method: "POST", body: form }).then(function(res) {
+        if (!res.ok) return res.text().then(function(t) { throw new Error(t); });
+        return res.json();
+      }).then(function(data) {
+        var elapsed = ((Date.now() - start) / 1000).toFixed(2);
+        transcript.textContent = data.text || "(empty transcript)";
+        status.textContent = "Transcribed in " + elapsed + "s | Language: " + data.language + " | Audio: " + (data.duration ? data.duration.toFixed(1) : "?") + "s";
+        status.className = "status success";
+      }).catch(function(err) {
+        status.textContent = "Error: " + err.message;
+        status.className = "status error";
+      });
+    }
+
+    // ===== API Docs - Endpoint Table =====
+    (function buildEndpointTable() {
+      var endpoints = [
+        { method: "POST", path: "/api/tts", price: "$0.05 / request", desc: "Text to speech (WAV)", paid: true },
+        { method: "POST", path: "/api/stt", price: "$0.01 / request", desc: "Speech to text (JSON)", paid: true },
+        { method: "POST", path: "/api/demo/tts", price: "Free (demo)", desc: "TTS demo, 500 char limit", paid: false },
+        { method: "POST", path: "/api/demo/stt", price: "Free (demo)", desc: "STT demo, 5 MB limit", paid: false },
+        { method: "GET", path: "/api/voices", price: "Free", desc: "List available voices", paid: false },
+        { method: "GET", path: "/api/health", price: "Free", desc: "Health check", paid: false },
+        { method: "GET", path: "/openapi.json", price: "Free", desc: "OpenAPI 3.1 spec", paid: false }
+      ];
+      var tbody = document.getElementById("endpoint-tbody");
+      for (var i = 0; i < endpoints.length; i++) {
+        var ep = endpoints[i];
+        var tr = document.createElement("tr");
+
+        var tdMethod = document.createElement("td");
+        var methodSpan = document.createElement("span");
+        methodSpan.className = "method-badge " + ep.method.toLowerCase();
+        methodSpan.textContent = ep.method;
+        tdMethod.appendChild(methodSpan);
+        tr.appendChild(tdMethod);
+
+        var tdPath = document.createElement("td");
+        var pathCode = document.createElement("code");
+        pathCode.className = "ep-path";
+        pathCode.textContent = ep.path;
+        tdPath.appendChild(pathCode);
+        tr.appendChild(tdPath);
+
+        var tdPrice = document.createElement("td");
+        tdPrice.className = "ep-price";
+        tdPrice.textContent = ep.price;
+        tr.appendChild(tdPrice);
+
+        var tdDesc = document.createElement("td");
+        tdDesc.className = "ep-desc";
+        tdDesc.textContent = ep.desc;
+        tr.appendChild(tdDesc);
+
+        tbody.appendChild(tr);
+      }
+    })();
+
+    // ===== API Docs - Code Examples =====
+    (function buildCodeExamples() {
+      document.getElementById("tts-request-example").textContent =
+'{\n  "text": "Hello world",\n  "voice": "en_US-amy-medium",\n  "speed": 1.0,\n  "noiseScale": 0.667,\n  "noiseW": 0.8,\n  "sentenceSilence": 0.2,\n  "speaker": 0\n}';
+
+      document.getElementById("tts-response-example").textContent =
+'Content-Type: audio/wav\nContent-Length: 48256\n\n[binary WAV data]';
+
+      document.getElementById("stt-request-example").textContent =
+'POST /api/stt\nContent-Type: multipart/form-data\n\nfile: <audio file (mp3, wav, m4a, webm, ogg, flac)>\nlanguage: "en"  // optional, auto-detect if omitted';
+
+      document.getElementById("stt-response-example").textContent =
+'{\n  "text": "Hello world, this is a test.",\n  "language": "en",\n  "duration": 1.234\n}';
+
+      document.getElementById("curl-tts-example").textContent =
+'curl -X POST https://voicempp.shelmail.xyz/api/demo/tts \\\n  -H "Content-Type: application/json" \\\n  -d \'{"text":"Hello from VoiceMPP!","voice":"en_US-amy-medium"}\' \\\n  --output speech.wav';
+
+      document.getElementById("curl-stt-example").textContent =
+'curl -X POST https://voicempp.shelmail.xyz/api/demo/stt \\\n  -F "file=@recording.wav" \\\n  -F "language=en"';
+
+      document.getElementById("ts-tts-example").textContent =
+'var response = await fetch("/api/demo/tts", {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify({\n    text: "Hello from VoiceMPP!",\n    voice: "en_US-amy-medium",\n    speed: 1.0\n  })\n});\nvar audioBlob = await response.blob();\nvar audioUrl = URL.createObjectURL(audioBlob);';
+
+      document.getElementById("ts-stt-example").textContent =
+'var form = new FormData();\nform.append("file", audioFile);\nform.append("language", "en");\n\nvar response = await fetch("/api/demo/stt", {\n  method: "POST",\n  body: form\n});\nvar result = await response.json();\nconsole.log(result.text);';
+
+      document.getElementById("mppx-examples").textContent =
+'# Text to Speech (paid, requires Tempo wallet)\nmppx POST https://voicempp.shelmail.xyz/api/tts \\\n  -d \'{"text":"Hello from VoiceMPP!","voice":"en_US-amy-medium","speed":1.2}\'\n\n# Speech to Text (paid, $0.01/req)\nmppx POST https://voicempp.shelmail.xyz/api/stt \\\n  -F "file=@recording.wav" -F "language=en"\n\n# List voices (free)\ncurl https://voicempp.shelmail.xyz/api/voices | jq\n\n# Health check\ncurl https://voicempp.shelmail.xyz/api/health\n\n# OpenAPI discovery spec\ncurl https://voicempp.shelmail.xyz/openapi.json | jq';
+
+      // 402 payment flow example
+      document.getElementById("payment-flow-example").textContent =
+'# 1. Request without payment returns 402 challenge:\ncurl -X POST https://voicempp.shelmail.xyz/api/tts \\\n  -H "Content-Type: application/json" \\\n  -d \'{"text":"Hello"}\'\n\n# Response: HTTP 402 Payment Required\n# Headers:\n#   WWW-Authenticate: Payment id="...", realm="voicempp.shelmail.xyz",\n#     method="tempo", intent="charge", request="<base64>",\n#     description="TTS: 5 chars", expires="..."\n# Body:\n# {\n#   "type": "https://paymentauth.org/problems/payment-required",\n#   "title": "Payment Required",\n#   "status": 402,\n#   "detail": "Payment is required (TTS: 5 chars)."\n# }\n\n# 2. With mppx CLI, payment is handled automatically:\nmppx POST https://voicempp.shelmail.xyz/api/tts \\\n  -d \'{"text":"Hello"}\'\n# Returns: 200 + WAV audio binary';
+
+      // TypeScript mppx client example
+      document.getElementById("ts-mpp-example").textContent =
+'import { Mppx, tempo } from "mppx/client";\nimport { privateKeyToAccount } from "viem/accounts";\n\n// Create MPP client with your Tempo wallet\nconst mppx = Mppx.create({\n  methods: [tempo({ account: privateKeyToAccount("0x...") })],\n});\n\n// TTS \u2014 payment handled automatically on 402\nconst ttsRes = await mppx.fetch(\n  "https://voicempp.shelmail.xyz/api/tts",\n  {\n    method: "POST",\n    headers: { "Content-Type": "application/json" },\n    body: JSON.stringify({\n      text: "Hello from my agent!",\n      voice: "en_US-amy-medium",\n      speed: 1.0,\n    }),\n  }\n);\nconst wavData = await ttsRes.arrayBuffer();\n\n// STT \u2014 payment handled automatically on 402\nconst form = new FormData();\nform.append("file", audioBlob, "recording.wav");\nform.append("language", "en");\nconst sttRes = await mppx.fetch(\n  "https://voicempp.shelmail.xyz/api/stt",\n  { method: "POST", body: form }\n);\nconst { text, language, duration } = await sttRes.json();';
+    })();
+
+    // ===== Performance Table =====
+    (function buildPerfTable() {
+      var metrics = [
+        { metric: "TTS latency (100 chars)", value: "~200-400 ms" },
+        { metric: "TTS latency (500 chars)", value: "~500-800 ms" },
+        { metric: "STT latency (10s audio)", value: "~1-3 s" },
+        { metric: "Supported audio formats", value: "mp3, wav, m4a, webm, ogg, flac" },
+        { metric: "Max TTS input (paid)", value: "5,000 characters" },
+        { metric: "Max TTS input (demo)", value: "500 characters" },
+        { metric: "Max audio upload (paid)", value: "25 MB" },
+        { metric: "Max audio upload (demo)", value: "5 MB" },
+        { metric: "TTS engine", value: "Piper TTS (ONNX)" },
+        { metric: "STT engine", value: "whisper.cpp (ggml-base)" }
+      ];
+      var tbody = document.getElementById("perf-tbody");
+      for (var i = 0; i < metrics.length; i++) {
+        var tr = document.createElement("tr");
+        var tdMetric = document.createElement("td");
+        tdMetric.textContent = metrics[i].metric;
+        tdMetric.style.fontWeight = "500";
+        tr.appendChild(tdMetric);
+        var tdVal = document.createElement("td");
+        tdVal.textContent = metrics[i].value;
+        tdVal.style.color = "#6b7280";
+        tr.appendChild(tdVal);
+        tbody.appendChild(tr);
+      }
+    })();
+
+    // ===== Footer =====
+    (function buildFooter() {
+      var footer = document.getElementById("page-footer");
+      var parts = [
+        { text: "Built for the ", link: null },
+        { text: "Tempo MPP Hackathon 2026", link: "https://hackathon.tempo.xyz" },
+        { text: " | Powered by ", link: null },
+        { text: "Tempo", link: "https://tempo.xyz" },
+        { text: " + ", link: null },
+        { text: "MPP", link: "https://mpp.dev" },
+        { text: " | ", link: null },
+        { text: "GitHub", link: "https://github.com/dieutx/voicempp" }
+      ];
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].link) {
+          var a = document.createElement("a");
+          a.href = parts[i].link;
+          a.textContent = parts[i].text;
+          a.target = "_blank";
+          a.rel = "noopener";
+          footer.appendChild(a);
+        } else {
+          footer.appendChild(document.createTextNode(parts[i].text));
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
